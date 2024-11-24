@@ -142,7 +142,7 @@ function getOption(optionName, environmentName) {
 
 // Verify the header and the enclosed JWT.
 function verifyAndDecode(header) {
-  if (header.startsWith(bearerPrefix)) {
+  if (header?.startsWith(bearerPrefix)) {
     try {
       const token = header.substring(bearerPrefix.length);
       return jsonwebtoken.verify(token, secret, { algorithms: ['HS256'] });
@@ -182,7 +182,7 @@ function colorCycleHandler(req) {
 
 function colorQueryHandler(req) {
   // Verify all requests.
-  const payload = verifyAndDecode(req.headers.authorization);
+  const payload = verifyAndDecode(req.headers?.authorization);
 
   // Get the color for the channel from the payload and return it.
   const { channel_id: channelId, opaque_user_id: opaqueUserId } = payload;
@@ -216,15 +216,15 @@ function sendColorBroadcast(channelId) {
   // Create the POST body for the Twitch API request.
   const currentColor = color(channelColors[channelId] || initialColor).hex();
   const body = JSON.stringify({
-    content_type: 'application/json',
     message: currentColor,
-    targets: ['broadcast'],
+    broadcaster_id: channelId,
+    target: ['broadcast'],
   });
 
   // Send the broadcast request to the Twitch API.
   verboseLog(STRINGS.colorBroadcast, currentColor, channelId);
   request(
-    `https://api.twitch.tv/extensions/message/${channelId}`,
+    `https://api.twitch.tv/helix/extensions/pubsub`,
     {
       method: 'POST',
       headers,
